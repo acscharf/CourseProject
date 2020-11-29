@@ -100,6 +100,8 @@ def main():
     print(train_data[:10])
     
 
+
+    #training code taken from from https://github.com/explosion/spaCy/blob/master/examples/training/train_textcat.py
     pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train textcat
