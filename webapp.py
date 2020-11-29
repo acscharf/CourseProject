@@ -1,5 +1,5 @@
 from flask import Flask, request
-
+import plac
 import spacy
 
 app = Flask(__name__)
@@ -17,7 +17,7 @@ def home():
                 <!--
                 <p>
                 <input type='radio' name='language' value='ja'>
-                <label for='ja'>日本語</label><br>
+                <label for='ja'>Japanese</label><br>
                 <input type='radio' id='en' name='language' value='en'>
                 <label for='en'>English</label><br>
                 </p>
@@ -49,4 +49,4 @@ def result():
 if __name__ == "__main__":
     plac.call(main)
 
-app.run(host="localhost", debug=True)
+#app.run(host="localhost", debug=True)
