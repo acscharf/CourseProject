@@ -83,8 +83,8 @@ def main():
 
     print(train[:10])
 
-    n_texts=161
-    n_iter=10
+    n_texts=583
+    n_iter=20
 
     (train_texts, train_cats), (dev_texts, dev_cats) = load_data(train=train, limit=n_texts)
     train_texts = train_texts[:n_texts]
