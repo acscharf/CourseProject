@@ -58,7 +58,7 @@ def home():
 def result():
     reflection = request.args['reflection']
     #language = request.args['language']
-    nlp = spacy.load("textdata")
+    nlp = spacy.load("english_model")
     doc = nlp(reflection)
 
     if doc.cats["USEFUL"] > doc.cats["NOT USEFUL"]:
@@ -78,6 +78,80 @@ def result():
             <li>Words like "apply" and "use" rather than "understand"
             </p>
             <p><a href="/">Enter another reflection?</a><p>
+        </body></html>
+        """.format(msg, percent)
+
+
+@app.route('/ja')
+def home_ja():
+    return """
+        <html>
+        <head>
+        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+        <script>
+        $(document).ready(function(){
+            $('#useful').click(function(){
+                $('#reflection_area').val('企業が無駄な資産を抱え込まず効率的に売り上げ等を実現しているかを見る分析であることを学びました。ここで得た学びは、会計・財務システムの保守業務、顧客担当者とのコミュニケーションに活用します。');
+            });
+            $('#not_useful').click(function(){
+                $('#reflection_area').val('理解しやすい内容でした。実践の場でも活用したい。');
+            });
+        });
+       </script>
+       </head>
+        <body>
+            <h1>振り返りアドバイザー</h2>
+            
+                <h2>サンプル動画：効率性分析</h2>
+                <p>
+                <a href='https://hodai.globis.co.jp/courses/71893843'>こちらからご覧ください</a>
+                </p>
+                <p>
+                <h2>学んだ内容は業務や日常においてどう活用できそうですか？</h2>
+                <p>
+                具体的なシーンをイメージしながら書いてみましょう。
+                </p>
+                <p>
+
+                <form action='/result_ja'>
+                <textarea id='reflection_area' name='reflection' rows='10' cols='40' placeholder='例：業務で活用するためには、◯◯◯が大事だと感じます/◯◯◯なシーンにおいて、活用できるものだと思います'></textarea>
+                </p>
+
+                <input type='submit' value='Submit'>
+
+                              
+
+            </form>
+            <h3>サンプルでやってみる？</h3>
+            <p>
+              <button id='useful'>役立ち振り返り</button>
+              </p>
+              <p>
+              <button id='not_useful'>役に立たない振り返り</button>
+            </p>
+        </body></html>
+        """
+
+@app.route('/result_ja')
+def result_ja():
+    reflection = request.args['reflection']
+    #language = request.args['language']
+    nlp = spacy.load("japanese_model")
+    doc = nlp(reflection)
+
+    if doc.cats["USEFUL"] > doc.cats["NOT USEFUL"]:
+        msg = '振り返りはとってもよかった！'
+        percent = doc.cats["USEFUL"] - doc.cats["NOT USEFUL"]
+    else:
+        msg = '振り返りは改善の余地がある。'
+        percent = doc.cats["NOT USEFUL"] - doc.cats["USEFUL"]
+
+    return """
+        <html><body>
+            <h2>{0}</h2>
+            <p>（自信度： {1:.0%}）</p>
+            </p>
+            <p><a href="/ja">もう一度振り返りを書いてみますか？</a><p>
         </body></html>
         """.format(msg, percent)
 

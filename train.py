@@ -7,69 +7,38 @@ from spacy.util import minibatch, compounding
 
 
 def main():
-    nlp = spacy.load("en_core_web_sm")
 
-    english_reflections = pd.read_csv("data/english.csv")
+    english_nlp = spacy.load("en_core_web_sm")
+    japanese_nlp = spacy.load("ja_core_news_sm")
 
-    english_reflections = english_reflections[['useful','comment']].dropna()
-    english_reflections = english_reflections.replace('\n',' ', regex=True) 
+    english_reflections = read_csv("data/english.csv", 700)
+    japanese_reflections = read_csv("data/japanese.csv", 500)
 
-    useful_len = 0
-    useful_docs = 0
-    useful_pos_c = Counter()
-    useful_word_c = Counter()
+    analyze_reflections(english_reflections, english_nlp, "English")
+    analyze_reflections(japanese_reflections, japanese_nlp, "Japanese")
 
-    not_useful_len = 0
-    not_useful_docs = 0
-    not_useful_pos_c = Counter()
-    not_useful_word_c = Counter()
+    english_optimizer = train_reflections(english_reflections, english_nlp, 25, 700)
+    japanese_optimizer = train_reflections(japanese_reflections, japanese_nlp, 25, 500)
 
-    for index, row in english_reflections.iterrows():
-        if english_reflections.at[index, 'useful'] == 0:
-            not_useful_docs += 1
-            doc = nlp(english_reflections.at[index, 'comment'])
-            not_useful_len += len(doc)
-            not_useful_pos_c += Counter(([token.pos_ for token in doc]))
-            not_useful_word_c += Counter(([token.text for token in doc if token.is_stop != True and token.is_punct != True and token.text != ' ']))
-        elif english_reflections.at[index, 'useful'] == 1:
-            useful_docs += 1
-            doc = nlp(english_reflections.at[index, 'comment'])
-            useful_len += len(doc)
-            useful_pos_c += Counter(([token.pos_ for token in doc]))
-            useful_word_c += Counter(([token.text for token in doc if token.is_stop != True and token.is_punct != True and token.text != ' ']))
+    print("Not useful:")
+    test_text="Video was good"
+    doc=english_nlp(test_text)
+    print(doc.cats)
 
-    sbase = sum(useful_pos_c.values())
+    print("Useful:")
+    test_text="I can take the learning from MECE and apply it to my current job by checking the sales charts."
+    doc=english_nlp(test_text)
+    print(doc.cats)
 
-    print("Useful percentages")
-    for label, cnt in useful_pos_c.items():
-        print(label, '{0:2.2f}%'.format((100.0* cnt)/sbase))
+    with english_nlp.use_params(english_optimizer.averages):
+        english_nlp.to_disk("english_model")
+        print("Saved model")
 
-    print("Useful count")
-    for label, cnt in useful_pos_c.items():
-        print(label, cnt)
+    with japanese_nlp.use_params(japanese_optimizer.averages):
+        japanese_nlp.to_disk("japanese_model")
+        print("Saved model")
 
-    print("Useful most common")
-    print(useful_word_c.most_common(10))
-
-    print("Useful length")
-    print(useful_len / useful_docs)
-
-
-    print("Not useful percentages")
-    for label, cnt in not_useful_pos_c.items():
-        print(label, '{0:2.2f}%'.format((100.0* cnt)/sbase))
-
-    print("Not useful count")
-    for label, cnt in not_useful_pos_c.items():
-        print(label, cnt)
-
-    print("Not useful most common")
-    print(not_useful_word_c.most_common(10))
-
-    print("Not useful length")
-    print(not_useful_len / not_useful_docs)
-
-
+def train_reflections(reflections, nlp, n_iter, n_texts):
     textcat = nlp.create_pipe("textcat", config={"exclusive_classes": True, "architecture": "simple_cnn"})
 
     nlp.add_pipe(textcat, last=True)
@@ -77,14 +46,9 @@ def main():
     textcat.add_label("USEFUL")
     textcat.add_label("NOT USEFUL")
 
-    english_reflections['tuples'] = english_reflections.apply(lambda row: (row['comment'], row['useful']), axis=1)
+    reflections['tuples'] = reflections.apply(lambda row: (row['comment'], row['useful']), axis=1)
 
-    train = english_reflections['tuples'].tolist()
-
-    print(train[:10])
-
-    n_texts=583
-    n_iter=20
+    train = reflections['tuples'].tolist()
 
     (train_texts, train_cats), (dev_texts, dev_cats) = load_data(train=train, limit=n_texts)
     train_texts = train_texts[:n_texts]
@@ -96,10 +60,6 @@ def main():
     )
 
     train_data = list(zip(train_texts,[{'cats': cats} for cats in train_cats]))
-
-    print(train_data[:10])
-    
-
 
     #training code taken from from https://github.com/explosion/spaCy/blob/master/examples/training/train_textcat.py
     pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
@@ -133,20 +93,78 @@ def main():
                     scores["textcat_f"],
                 )
             )
-        
-        print("Not useful:")
-        test_text="Video was good"
-        doc=nlp(test_text)
-        print(doc.cats)
 
-        print("Useful:")
-        test_text="I can take the learning from MECE and apply it to my current job by checking the sales charts."
-        doc=nlp(test_text)
-        print(doc.cats)
+    return optimizer
+    
 
-        with nlp.use_params(optimizer.averages):
-            nlp.to_disk("textdata")
-        print("Saved model")
+def read_csv(filename, rows):
+    rows += 1
+    reflections = pd.read_csv(filename, nrows=rows)
+    reflections = reflections[['useful','comment']].dropna()
+    reflections = reflections.replace('\n',' ', regex=True) 
+    return reflections
+
+def analyze_reflections(reflections, nlp, language):
+    useful_len = 0
+    useful_docs = 0
+    useful_pos_c = Counter()
+    useful_word_c = Counter()
+
+    not_useful_len = 0
+    not_useful_docs = 0
+    not_useful_pos_c = Counter()
+    not_useful_word_c = Counter()
+
+    for index, row in reflections.iterrows():
+        if reflections.at[index, 'useful'] == 0:
+            not_useful_docs += 1
+            doc = nlp(reflections.at[index, 'comment'])
+            not_useful_len += len(doc)
+            not_useful_pos_c += Counter(([token.pos_ for token in doc]))
+            not_useful_word_c += Counter(([token.text for token in doc if token.is_stop != True and token.is_punct != True and token.text != ' ']))
+        elif reflections.at[index, 'useful'] == 1:
+            useful_docs += 1
+            doc = nlp(reflections.at[index, 'comment'])
+            useful_len += len(doc)
+            useful_pos_c += Counter(([token.pos_ for token in doc]))
+            useful_word_c += Counter(([token.text for token in doc if token.is_stop != True and token.is_punct != True and token.text != ' ']))
+
+    sbase = sum(useful_pos_c.values())
+
+    print("\n#######################")
+    print(language + " analysis")
+    print("#######################")
+
+
+    print("\n-----------------------")
+    print("PARTS OF SPEECH")
+    print("-----------------------")
+    print("\nUseful:")
+    for label, cnt in useful_pos_c.items():
+        print(label, '{0:2.2f}%'.format((100.0* cnt)/sbase))
+    
+
+    print("\nNot useful:")
+    for label, cnt in not_useful_pos_c.items():
+        print(label, '{0:2.2f}%'.format((100.0* cnt)/sbase))
+
+    print("\n-----------------------")
+    print("COMMON WORDS")
+    print("-----------------------")
+    print("\nUseful:")
+    print(useful_word_c.most_common(10))
+
+    print("\nNot useful")
+    print(not_useful_word_c.most_common(10))
+
+    print("\n-----------------------")
+    print("AVERAGE LENGTH")
+    print("-----------------------")
+    print("\nUseful:")
+    print(useful_len / useful_docs)
+
+    print("\nNot useful:")
+    print(not_useful_len / not_useful_docs)
 
 
 def load_data(train, limit=0, split=0.8):
@@ -169,7 +187,7 @@ def evaluate(tokenizer, textcat, texts, cats):
         for label, score in doc.cats.items():
             if label not in gold:
                 continue
-            if label == "NEGATIVE":
+            if label == "NOT USEFUL":
                 continue
             if score >= 0.5 and gold[label] >= 0.5:
                 tp += 1.0
