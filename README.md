@@ -40,6 +40,7 @@ Trains model based upon label reflections data with a pandas DataFrame, spaCy NL
 The application requires the spaCy and pandas libaries as well as the "en_core_web_sm" and "ja_core_news_sm" spacy models. Additionally, the software needs the english.csv and japanese.csv labeled reflection datasets in a "data" subfolder. Examples can be found in this repository:
 
 English: https://github.com/acscharf/CourseProject/blob/main/data/english.csv
+
 Japanese: https://github.com/acscharf/CourseProject/blob/main/data/japanese.csv
 
 After completion, the program saves a model to disk in the "english_model" and "japanese_model" subfolders.
