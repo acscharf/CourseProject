@@ -69,3 +69,18 @@ flask run
 This will start a development server on http://127.0.0.1:5000/.
 
 A working version can be found at http://alexscharf.com/
+
+## Other files
+
+### Proposal.pdf
+Project proposal
+
+### Progress report.pdf
+Mid-term progress report
+
+### example_output.txt
+Example output of train.py analysis
+
+### waitress_server.py
+Configuration file for production web server
+
