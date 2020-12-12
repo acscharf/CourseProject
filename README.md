@@ -88,3 +88,18 @@ Example output of train.py analysis
 ### waitress_server.py
 Configuration file for production web server
 
+## Self-evaluation
+
+### Have you completed what you have planned? 
+
+I was able to complete complete all the planned outcomes as mentioned in the original project proposal. In fact, I went beyond the project proposal by including generating a training model and a web front-end for Japanese as well as English. I initially did not include this in the original proposal because I was not sure of my ability to correctly label the Japanese data, but I found a subset of the data (for an accounting course) that allowed me to do so, and hence exceeded the original project proposal.
+
+### Have you got the expected outcome?
+
+The outcome for the reflection predicter is as expected. As originally proposed, I conducted user tests to see if the program functions to their expectations. Their feedback was as follows:
+- The application is very good at filtering out obviously bad reflections ("The course was interesting"). This is very useful, as these low-quality responses have the largest user impact
+- The application can still be "tricked" by writing grammatically correct and keyword packed sentences that ultimately have little meaning ("I love studying business and applying business for my presentations. It helps me succeed at work with my boss and also with my coworkers." gets a perfect score). This is not intended to be a grading mechanism, however, so tackling these it outside the scope of the project.
+
+The outcome for the reflection analyzer was also insightful, but not as much as expected. As expected, better reflections tend to have more words (around 22 on average, compared with 9 for not useful ones). However, the parts of speech and common words were quite similar for "useful" and "not useful" reflections, suggesting that to do a heuristic analysis of reflections, much deeper insight is needed and training a model is a much more effective approach, justifying the original project.
+
+
